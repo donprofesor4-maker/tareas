@@ -248,6 +248,16 @@
             text-align: center;
         }
 
+        .debug-info {
+            background: #f39c12;
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 0.85em;
+            display: none;
+        }
+
         .loading {
             display: inline-block;
             width: 20px;
@@ -333,6 +343,7 @@
                 </div>
 
                 <div class="error-message" id="errorMessage"></div>
+                <div class="debug-info" id="debugInfo"></div>
 
                 <button type="submit" class="submit-btn" id="submitBtn">
                     Enviar Trabajo
@@ -343,7 +354,7 @@
                 <h3>✅ ¡Trabajo enviado exitosamente!</h3>
                 <p>Tu entrega ha sido guardada en el sistema.</p>
                 <p style="margin-top: 10px; font-size: 0.9em; opacity: 0.9;">
-                    Recibirás confirmación por correo (si se configuró)
+                    Los archivos están siendo procesados...
                 </p>
             </div>
         </div>
@@ -353,8 +364,8 @@
         // ============================================
         // CONFIGURACIÓN - PEGA AQUÍ TU URL DE GOOGLE APPS SCRIPT
         // ============================================
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxm1Ft9tlQFCgENSgS_IRwuj3He1mJDbiivY2btXzljP1k7B4-u1rgiPFhFtZMGzKoN/exec';
-        // Reemplaza 'AKfycbxm1Ft9tlQFCgENSgS_IRwuj3He1mJDbiivY2btXzljP1k7B4-u1rgiPFhFtZMGzKoN' con el ID que obtendrás al crear el script de Google
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/TU_ID_AQUI/exec';
+        // REEMPLAZA 'TU_ID_AQUI' con el ID de tu script de Google
         
         let filesArray = [];
         const dropZone = document.getElementById('dropZone');
@@ -367,6 +378,15 @@
         const submitBtn = document.getElementById('submitBtn');
         const successMessage = document.getElementById('successMessage');
         const errorMessage = document.getElementById('errorMessage');
+        const debugInfo = document.getElementById('debugInfo');
+
+        // Verificar configuración al cargar
+        window.addEventListener('load', () => {
+            if (GOOGLE_SCRIPT_URL.includes('TU_ID_AQUI')) {
+                showError('⚠️ ERROR: Debes configurar la URL de Google Apps Script en el código');
+                submitBtn.disabled = true;
+            }
+        });
 
         // Eventos Drag & Drop
         dropZone.addEventListener('click', () => fileInput.click());
@@ -392,15 +412,14 @@
 
         function handleFiles(files) {
             errorMessage.style.display = 'none';
+            debugInfo.style.display = 'none';
             
             files.forEach(file => {
-                // Validar tamaño (10MB máximo para Google Apps Script)
                 if (file.size > 10 * 1024 * 1024) {
                     showError(`El archivo "${file.name}" excede el límite de 10MB`);
                     return;
                 }
                 
-                // Evitar duplicados
                 if (!filesArray.some(f => f.name === file.name && f.size === file.size)) {
                     filesArray.push(file);
                 }
@@ -455,12 +474,15 @@
         function showError(msg) {
             errorMessage.textContent = msg;
             errorMessage.style.display = 'block';
-            setTimeout(() => {
-                errorMessage.style.display = 'none';
-            }, 5000);
+            debugInfo.style.display = 'none';
         }
 
-        // Conversión de archivo a Base64
+        function showDebug(msg) {
+            debugInfo.textContent = 'Debug: ' + msg;
+            debugInfo.style.display = 'block';
+            console.log(msg);
+        }
+
         function readFileAsBase64(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -473,7 +495,6 @@
             });
         }
 
-        // Envío del formulario
         uploadForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -482,14 +503,18 @@
                 return;
             }
 
-            // Deshabilitar botón y mostrar progreso
+            if (GOOGLE_SCRIPT_URL.includes('TU_ID_AQUI')) {
+                showError('Error de configuración: Falta la URL de Google Apps Script');
+                return;
+            }
+
             submitBtn.disabled = true;
             submitBtn.innerHTML = 'Subiendo... <span class="loading"></span>';
             progressContainer.style.display = 'block';
             errorMessage.style.display = 'none';
+            debugInfo.style.display = 'none';
 
             try {
-                // Preparar datos
                 const formData = {
                     studentName: document.getElementById('studentName').value.trim(),
                     studentId: document.getElementById('studentId').value.trim(),
@@ -498,55 +523,67 @@
                     files: []
                 };
 
-                // Procesar archivos
                 progressText.textContent = `Procesando ${filesArray.length} archivo(s)...`;
                 
                 for (let i = 0; i < filesArray.length; i++) {
                     const file = filesArray[i];
-                    progressFill.style.width = `${((i + 0.5) / filesArray.length) * 50}%`;
+                    progressFill.style.width = `${((i + 0.5) / filesArray.length) * 40}%`;
                     progressText.textContent = `Leyendo: ${file.name}...`;
                     
                     const base64 = await readFileAsBase64(file);
                     
                     formData.files.push({
                         name: file.name,
-                        type: file.type,
+                        type: file.type || 'application/octet-stream',
                         size: file.size,
                         data: base64
                     });
                 }
 
-                progressFill.style.width = '60%';
+                progressFill.style.width = '50%';
                 progressText.textContent = 'Enviando a servidor...';
+                showDebug('Enviando datos al servidor...');
 
-                // Enviar a Google Apps Script
-                const response = await fetch(GOOGLE_SCRIPT_URL, {
-                    method: 'POST',
-                    body: JSON.stringify(formData),
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    mode: 'no-cors' // Importante para Google Apps Script
+                // Usar XMLHttpRequest en lugar de fetch para mejor compatibilidad con CORS
+                const xhr = new XMLHttpRequest();
+                
+                const response = await new Promise((resolve, reject) => {
+                    xhr.open('POST', GOOGLE_SCRIPT_URL, true);
+                    xhr.setRequestHeader('Content-Type', 'application/json');
+                    
+                    xhr.onload = function() {
+                        if (xhr.status === 200) {
+                            resolve(xhr.responseText);
+                        } else {
+                            reject(new Error('Error HTTP: ' + xhr.status));
+                        }
+                    };
+                    
+                    xhr.onerror = () => reject(new Error('Error de red'));
+                    xhr.ontimeout = () => reject(new Error('Timeout'));
+                    
+                    xhr.send(JSON.stringify(formData));
                 });
 
                 progressFill.style.width = '100%';
                 progressText.textContent = '¡Completado!';
+                showDebug('Respuesta del servidor: ' + response.substring(0, 100));
 
-                // Mostrar éxito
                 setTimeout(() => {
                     uploadForm.style.display = 'none';
                     successMessage.style.display = 'block';
                     progressContainer.style.display = 'none';
                     
-                    // Reset después de 5 segundos
                     setTimeout(() => {
                         resetForm();
-                    }, 5000);
+                    }, 4000);
                 }, 500);
 
             } catch (error) {
-                console.error('Error:', error);
-                showError('Error al enviar. Intenta de nuevo o contacta al profesor.');
+                console.error('Error completo:', error);
+                showError('Error al enviar: ' + error.message);
+                showDebug('Detalle: ' + error.toString());
+                
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = 'Enviar Trabajo';
                 progressContainer.style.display = 'none';
@@ -562,9 +599,9 @@
             submitBtn.disabled = false;
             submitBtn.innerHTML = 'Enviar Trabajo';
             progressFill.style.width = '0%';
+            debugInfo.style.display = 'none';
         }
 
-        // Advertencia si intenta salir con archivos pendientes
         window.addEventListener('beforeunload', (e) => {
             if (filesArray.length > 0 && uploadForm.style.display !== 'none') {
                 e.preventDefault();
