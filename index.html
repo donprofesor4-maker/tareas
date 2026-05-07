@@ -79,7 +79,9 @@
       <label>Materia</label>
       <select id="materia">
         <option value="">Selecciona la materia...</option>
-        <option>Tecnología</option>
+        <option>Taller Digital</option>
+        <option>Cultura Digital</option>
+        <option>Formación Laboral</option>
       </select>
     </div>
     <div class="field">
@@ -97,7 +99,7 @@
   </div>
 </div>
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzUoIbL3JFZmLyduqfNxYioySbBaAdvj1eoErhxqcxfO1plZdrFia7yKJVlC-8Lj1y-/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyOfsRzzrx8-jtxdNLIbMzB3EOIHa8vhowyRg68_FfqnVX-APVnNZuPFTBmJ4CIwvP_/exec';
 
 document.getElementById('archivo').addEventListener('change', function() {
   const fn = document.getElementById('fileName');
@@ -139,7 +141,7 @@ async function enviar() {
     const base64 = e.target.result.split(',')[1];
     const payload = { nombre, matricula, grado, materia, fileName: archivo.name, fileData: base64, mimeType: archivo.type };
     try {
-      const res  = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'text/plain' } });
+      const res  = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
       const data = await res.json();
       if (data.ok) {
         msg.textContent = '✅ ¡Tarea entregada! Ya quedó guardada.';
