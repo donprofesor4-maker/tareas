@@ -85,7 +85,7 @@
       </select>
     </div>
     <div class="field">
-      <label>Archivo</label>
+      <label>Archivo <span style="font-size:0.75em;color:#aaa;text-transform:none;letter-spacing:0">(menor a 50 MB)</span></label>
       <div class="file-area">
         <input type="file" id="archivo" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.zip,.pptx,.xlsx,.kra">
         <div class="file-icon">📎</div>
@@ -93,13 +93,18 @@
         <div class="file-name" id="fileName"></div>
       </div>
     </div>
+    <div class="field">
+      <label>Link del archivo <span style="font-size:0.75em;color:#aaa;text-transform:none;letter-spacing:0">(si pesa más de 50 MB)</span></label>
+      <input type="url" id="linkArchivo" placeholder="https://drive.google.com/...">
+      <div style="font-size:0.72em;color:#aaa;margin-top:5px;line-height:1.4">📌 Drive → clic derecho → Compartir → "Cualquier persona con el enlace" → pega el link aquí.</div>
+    </div>
     <button class="btn" id="btn" onclick="enviar()">Enviar tarea →</button>
     <div class="spinner" id="spinner">Enviando... un momento ⏳</div>
     <div class="msg" id="msg"></div>
   </div>
 </div>
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyOfsRzzrx8-jtxdNLIbMzB3EOIHa8vhowyRg68_FfqnVX-APVnNZuPFTBmJ4CIwvP_/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyIH-koIPyrrpo5XFirqcHzyzhCGljN1aQvm0t4GzacD6H6azDm0SBbGSFiVjkbqPia/exec';
 
 document.getElementById('archivo').addEventListener('change', function() {
   const fn = document.getElementById('fileName');
@@ -112,6 +117,7 @@ function resetForm() {
   document.getElementById('grado').value = '';
   document.getElementById('materia').value = '';
   document.getElementById('archivo').value = '';
+  document.getElementById('linkArchivo').value = '';
   document.getElementById('fileName').style.display = 'none';
   document.getElementById('btn').textContent = 'Enviar tarea →';
   document.getElementById('btn').disabled = false;
@@ -122,12 +128,13 @@ async function enviar() {
   const matricula = document.getElementById('matricula').value.trim();
   const grado     = document.getElementById('grado').value;
   const materia   = document.getElementById('materia').value;
-  const archivo   = document.getElementById('archivo').files[0];
+  const archivo    = document.getElementById('archivo').files[0];
+  const linkArchivo = document.getElementById('linkArchivo').value.trim();
   const msg       = document.getElementById('msg');
   msg.className   = 'msg';
   msg.style.display = 'none';
 
-  if (!nombre || !grado || !materia || !archivo) {
+  if (!nombre || !grado || !materia || (!archivo && !linkArchivo)) {
     msg.textContent = 'Por favor llena todos los campos y sube un archivo.';
     msg.className = 'msg err';
     return;
@@ -136,10 +143,34 @@ async function enviar() {
   document.getElementById('btn').disabled = true;
   document.getElementById('spinner').style.display = 'block';
 
+  // Si no hay archivo pero sí link, enviar solo el link
+  if (!archivo && linkArchivo) {
+    const payload = { nombre, matricula, grado, materia, fileName: '', fileData: '', mimeType: '', linkArchivo };
+    try {
+      const res  = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+      const data = await res.json();
+      if (data.ok) {
+        msg.textContent = '✅ ¡Tarea entregada con link! Ya quedó guardada.';
+        msg.className = 'msg ok';
+        setTimeout(() => { resetForm(); msg.style.display = 'none'; }, 3000);
+      } else {
+        msg.textContent = '❌ Error: ' + (data.error || 'intenta de nuevo');
+        msg.className = 'msg err';
+        document.getElementById('btn').disabled = false;
+      }
+    } catch(err) {
+      msg.textContent = '❌ Error de conexión.';
+      msg.className = 'msg err';
+      document.getElementById('btn').disabled = false;
+    }
+    document.getElementById('spinner').style.display = 'none';
+    return;
+  }
+
   const reader = new FileReader();
   reader.onload = async function(e) {
     const base64 = e.target.result.split(',')[1];
-    const payload = { nombre, matricula, grado, materia, fileName: archivo.name, fileData: base64, mimeType: archivo.type };
+    const payload = { nombre, matricula, grado, materia, fileName: archivo.name, fileData: base64, mimeType: archivo.type, linkArchivo };
     try {
       const res  = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
       const data = await res.json();
