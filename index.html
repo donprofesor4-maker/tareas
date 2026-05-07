@@ -247,7 +247,7 @@ async function enviar() {
     const base64 = e.target.result.split(',')[1];
     const payload = { nombre, matricula, grado, materia, fileName: archivo.name, fileData: base64, mimeType: archivo.type };
     try {
-      const res  = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+      const res  = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'text/plain' } });
       const data = await res.json();
       if (data.ok) {
         msg.textContent = '✅ ¡Tarea entregada! Ya quedó guardada.';
