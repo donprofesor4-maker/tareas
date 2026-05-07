@@ -3,102 +3,270 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Entrega de Tareas</title>
+<title>Entrega de Tareas — Don Profe</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;700;900&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-* { margin:0; padding:0; box-sizing:border-box; }
-body {
-  font-family: system-ui, sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  min-height: 100vh; display:flex; align-items:center; justify-content:center;
-  padding: 20px;
-}
-.card {
-  background: white; border-radius: 20px; padding: 40px;
-  max-width: 500px; width: 100%;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-}
-h1 { text-align:center; color:#333; margin-bottom:5px; font-size:1.8em; }
-.sub { text-align:center; color:#888; margin-bottom:25px; font-size:0.9em; }
-label { display:block; margin-bottom:6px; color:#333; font-weight:600; }
-input, select { width:100%; padding:12px; border:2px solid #e0e0e0; border-radius:10px; font-size:1em; margin-bottom:15px; }
-input:focus, select:focus { outline:none; border-color:#667eea; }
-input[type=file] { padding:10px; }
-.btn {
-  width:100%; padding:14px; background:#667eea; color:white;
-  border:none; border-radius:12px; font-size:1.1em; font-weight:600;
-  cursor:pointer; transition:background 0.3s;
-}
-.btn:hover { background:#5a6fd6; }
-.btn:disabled { background:#aaa; }
-.msg { text-align:center; margin-top:15px; font-weight:600; display:none; }
-.msg.ok { color:green; display:block; }
-.msg.err { color:red; display:block; }
-.loading { display:none; text-align:center; margin-top:10px; color:#888; }
+  :root {
+    --ink: #1a1a2e;
+    --cream: #f5f0e8;
+    --rose: #e8435a;
+    --gold: #f0a500;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    position: relative;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    top: -100px; right: -100px;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(232,67,90,0.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: -80px; left: -80px;
+    width: 350px; height: 350px;
+    background: radial-gradient(circle, rgba(240,165,0,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .wrap {
+    background: white;
+    border-radius: 24px;
+    max-width: 480px;
+    width: 100%;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.04), 0 24px 60px rgba(0,0,0,0.1);
+  }
+  .header {
+    background: var(--ink);
+    padding: 32px 36px 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::after {
+    content: '✦';
+    position: absolute;
+    right: 28px; top: 20px;
+    font-size: 3em;
+    color: var(--gold);
+    opacity: 0.3;
+  }
+  .school {
+    font-size: 0.7em;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 8px;
+  }
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-size: 2em;
+    color: white;
+    line-height: 1.1;
+    font-weight: 900;
+  }
+  h1 span { color: var(--rose); }
+  .body { padding: 32px 36px 36px; }
+  .field { margin-bottom: 20px; }
+  label {
+    display: block;
+    font-size: 0.78em;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #888;
+    margin-bottom: 7px;
+  }
+  input, select {
+    width: 100%;
+    padding: 13px 16px;
+    border: 2px solid #ececec;
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.97em;
+    color: var(--ink);
+    background: #fafafa;
+    transition: border-color 0.2s, background 0.2s;
+    appearance: none;
+  }
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--rose);
+    background: white;
+  }
+  .file-area {
+    border: 2px dashed #ddd;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    background: #fafafa;
+    position: relative;
+  }
+  .file-area:hover { border-color: var(--rose); background: #fff5f6; }
+  .file-area input[type=file] {
+    position: absolute; inset: 0;
+    opacity: 0; cursor: pointer;
+    width: 100%; height: 100%;
+    border: none; padding: 0;
+  }
+  .file-icon { font-size: 1.8em; margin-bottom: 6px; }
+  .file-label { font-size: 0.85em; color: #999; }
+  .file-label strong { color: var(--rose); }
+  .file-name { font-size: 0.85em; color: var(--ink); font-weight: 600; margin-top: 6px; display:none; }
+  .btn {
+    width: 100%;
+    padding: 15px;
+    background: var(--ink);
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-family: 'Fraunces', serif;
+    font-size: 1.05em;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.15s, background 0.2s;
+    margin-top: 8px;
+  }
+  .btn:hover:not(:disabled) { background: var(--rose); transform: translateY(-1px); }
+  .btn:disabled { background: #ccc; cursor: not-allowed; }
+  .msg {
+    text-align: center;
+    margin-top: 16px;
+    padding: 14px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.93em;
+    display: none;
+  }
+  .msg.ok { background: #e8f5e9; color: #2e7d32; display: block; }
+  .msg.err { background: #fdecea; color: #c62828; display: block; }
+  .spinner { display: none; text-align: center; margin-top: 12px; color: #aaa; font-size: 0.85em; }
 </style>
 </head>
 <body>
-
-<div class="card">
-  <h1>Entregar Tarea</h1>
-  <p class="sub">Sube tu trabajo</p>
-
-  <form id="form">
-    <label>Nombre completo</label>
-    <input type="text" id="nombre" required>
-
-    <label>Grado</label>
-    <select id="grado" required>
-      <option value="">Selecciona...</option>
-      <option>1° Primaria</option>
-      <option>2° Primaria</option>
-      <option>3° Primaria</option>
-      <option>4° Primaria</option>
-      <option>5° Primaria</option>
-      <option>6° Primaria</option>
-      <option>1° Secundaria</option>
-      <option>2° Secundaria</option>
-      <option>3° Secundaria</option>
-    </select>
-
-    <label>Archivo</label>
-    <input type="file" id="archivo" required accept=".pdf,.doc,.docx,.jpg,.png,.zip">
-
-    <button type="submit" class="btn" id="btn">Enviar Tarea</button>
-  </form>
-
-  <p class="msg ok" id="ok">Enviado correctamente</p>
-  <p class="msg err" id="err"></p>
+<div class="wrap">
+  <div class="header">
+    <div class="school">Colegio de Cervantes</div>
+    <h1>Entrega<br>de <span>Tareas</span></h1>
+  </div>
+  <div class="body">
+    <div class="field">
+      <label>Nombre completo</label>
+      <input type="text" id="nombre" placeholder="Tu nombre y apellidos">
+    </div>
+    <div class="field">
+      <label>Matrícula</label>
+      <input type="text" id="matricula" placeholder="Número de matrícula">
+    </div>
+    <div class="field">
+      <label>Grado</label>
+      <select id="grado">
+        <option value="">Selecciona tu grado...</option>
+        <optgroup label="Primaria">
+          <option>1° Primaria</option><option>2° Primaria</option>
+          <option>3° Primaria</option><option>4° Primaria</option>
+          <option>5° Primaria</option><option>6° Primaria</option>
+        </optgroup>
+        <optgroup label="Secundaria">
+          <option>1° Secundaria</option><option>2° Secundaria</option><option>3° Secundaria</option>
+        </optgroup>
+        <optgroup label="Preparatoria">
+          <option>Preparatoria 1er Semestre</option>
+          <option>Preparatoria 2do Semestre</option>
+          <option>Preparatoria 3er Semestre</option>
+          <option>Preparatoria 4to Semestre</option>
+          <option>Preparatoria 5to Semestre</option>
+          <option>Preparatoria 6to Semestre</option>
+        </optgroup>
+      </select>
+    </div>
+    <div class="field">
+      <label>Materia</label>
+      <input type="text" id="materia" placeholder="Ej: Tecnología, Cultura Digital...">
+    </div>
+    <div class="field">
+      <label>Archivo</label>
+      <div class="file-area">
+        <input type="file" id="archivo" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.zip,.pptx,.xlsx">
+        <div class="file-icon">📎</div>
+        <div class="file-label">Arrastra tu archivo o <strong>haz clic aquí</strong></div>
+        <div class="file-name" id="fileName"></div>
+      </div>
+    </div>
+    <button class="btn" id="btn" onclick="enviar()">Enviar tarea →</button>
+    <div class="spinner" id="spinner">Enviando... un momento ⏳</div>
+    <div class="msg" id="msg"></div>
+  </div>
 </div>
-
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyAZHYM9aWvQoGeXOdvYfFcpFh5C3LCaP8X_oIF05rlHQCUeMNZD_usyXNyYM89Uqo/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzIBu8xtvga6cTvu1l52Dx5hTSINJ-Go7VaF3MymAWHMRDs6aYbEfBIEjMf5kPvCe-V/exec';
 
-document.getElementById('form').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  document.getElementById('btn').disabled = true;
-
-  const fd = new FormData();
-  fd.append('nombre', document.getElementById('nombre').value);
-  fd.append('grado', document.getElementById('grado').value);
-  fd.append('archivo', document.getElementById('archivo').files[0]);
-
-  try {
-    const res = await fetch(SCRIPT_URL, { method: 'POST', body: fd });
-    const data = await res.json();
-    if (data.ok) {
-      document.getElementById('ok').style.display = 'block';
-      document.getElementById('err').style.display = 'none';
-    } else {
-      document.getElementById('err').textContent = data.error || 'Error';
-      document.getElementById('err').style.display = 'block';
-    }
-  } catch (err) {
-    document.getElementById('err').textContent = 'Error de conexion';
-    document.getElementById('err').style.display = 'block';
+document.getElementById('archivo').addEventListener('change', function() {
+  const fn = document.getElementById('fileName');
+  if (this.files[0]) {
+    fn.textContent = '📄 ' + this.files[0].name;
+    fn.style.display = 'block';
   }
-  document.getElementById('btn').disabled = false;
 });
-</script>
 
+async function enviar() {
+  const nombre    = document.getElementById('nombre').value.trim();
+  const matricula = document.getElementById('matricula').value.trim();
+  const grado     = document.getElementById('grado').value;
+  const materia   = document.getElementById('materia').value.trim();
+  const archivo   = document.getElementById('archivo').files[0];
+  const msg       = document.getElementById('msg');
+  msg.className   = 'msg';
+
+  if (!nombre || !grado || !materia || !archivo) {
+    msg.textContent = 'Por favor llena todos los campos y sube un archivo.';
+    msg.className = 'msg err';
+    return;
+  }
+
+  document.getElementById('btn').disabled = true;
+  document.getElementById('spinner').style.display = 'block';
+  msg.style.display = 'none';
+
+  const reader = new FileReader();
+  reader.onload = async function(e) {
+    const base64 = e.target.result.split(',')[1];
+    const payload = { nombre, matricula, grado, materia, fileName: archivo.name, fileData: base64, mimeType: archivo.type };
+    try {
+      const res  = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+      const data = await res.json();
+      if (data.ok) {
+        msg.textContent = '✅ ¡Tarea entregada! Ya quedó guardada.';
+        msg.className = 'msg ok';
+        document.getElementById('btn').textContent = 'Entregado ✓';
+      } else {
+        msg.textContent = '❌ Error: ' + (data.error || 'intenta de nuevo');
+        msg.className = 'msg err';
+        document.getElementById('btn').disabled = false;
+      }
+    } catch(err) {
+      msg.textContent = '❌ Error de conexión. Verifica tu internet e intenta de nuevo.';
+      msg.className = 'msg err';
+      document.getElementById('btn').disabled = false;
+    }
+    document.getElementById('spinner').style.display = 'none';
+  };
+  reader.readAsDataURL(archivo);
+}
+</script>
 </body>
 </html>
